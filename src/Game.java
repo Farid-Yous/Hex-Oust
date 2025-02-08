@@ -1,64 +1,123 @@
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.Scanner;
-
 public class Game {
-    private Board board;
     private Player player1;
     private Player player2;
+    private Player currentPlayer;
     private int round;
     private Player winner;
-    Player current = player2;
-    private Cell[][][] cells;
-    public void gameInit() {
-        board = new Board();
-        round = 0;
-        for(int i = -3; i <= 3; i++) {
-            for(int j = -3; j <= 3; j++) {
-                for(int k = -3; k <= 3; k++) {
-                    Cell cell = new Cell(i, j, k);
-                    cells[i][j][k] = cell;
+
+    public Game(Player player1, Player player2) throws InterruptedException {
+        this.player1 = player1;
+        this.player2 = player2;
+        gameInit();
+        currentPlayer = player1;
+        while (!checkWin(player1, player2)) {
+            System.out.println("Current turn: " + currentPlayer.getName());
+            while(!playTurn(currentPlayer)){
+                System.out.println("Invalid entry, play again " + currentPlayer.getName());
+            }
+            changeTurn();
+            System.out.println(currentPlayer.getName() + " score is " + currentPlayer.getNumCells());
+
+        }
+    }
+
+    private void gameInit() {
+        double size = 30;
+        double originX = 200;
+        double originY = 200;
+
+        Layout layout = new Layout(Layout.flat, new Point(size, size), new Point(originX, originY));
+        ArrayList<ArrayList<Point>> grid = new ArrayList<>();
+
+        for (int q = -3; q <= 3; q++) {
+            for (int r = -3; r <= 3; r++) {
+                for (int s = -3; s <= 3; s++) {
+                    if (q + r + s == 0) {
+                        HexCube hex = new HexCube(q, r, s);
+                        grid.add(layout.polygonCorners(hex));
+                    }
                 }
             }
         }
+
+        JFrame frame = new JFrame("Hex Grid");
+        HexGrid hexGrid = new HexGrid(grid, layout);
+        frame.add(hexGrid);
+        frame.setSize(1200, 1200);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
     }
-    //Game is the centre of the control and will alternate turns and call functions related to managing the game
-    public Game(){
-        while(!CheckWin( player1, player2)) {
-            playTurn(current);
-            changeTurn();
+
+    private void changeTurn() {
+        currentPlayer = (currentPlayer == player1) ? player2 : player1;
+    }
+
+    private Boolean playTurn(Player player) throws InterruptedException {
+        HexCube cell = HexGrid.clickedHex();
+        System.out.println("Clicked hex: " + cell.q + "," + cell.r + "," + cell.s);
+        System.out.println("Is occupied: " + cell.isOccupied());
+        cell = getCellByCoordinates(cell.q, cell.r, cell.s);
+        if(cell.isOccupied()){
+            return false;  // Return false if the cell is already occupied
         }
+
+        cell.setOccupant(player);  // Set the current player as the occupant
+        player.addCell();  // Add the cell to the player's score or collection of cells
+        return true;
     }
-    //changeTurn will change the current turn
-    private void changeTurn(){
-        if(current == player1) {
-            current = player2;
+
+    // Assuming your grid is a list of lists of HexCube
+    ArrayList<ArrayList<HexCube>> grid = new ArrayList<>();
+
+    // Method to find a HexCube by its q, r, s coordinates
+    public HexCube getCellByCoordinates(int q, int r, int s) {
+        for (ArrayList<HexCube> row : grid) {
+            for (HexCube hex : row) {
+                if (hex.q == q && hex.r == r && hex.s == s) {
+                    return hex;  // Return the found hex cell
+                }
+            }
         }
-        else current = player1;
-
+        return null;  // Return null if no matching cell is found
     }
-    //play turn will take as input a player and will ask the player to click on the screen to play their turn, the information taken from the click will set the occupant of that cell to the player who clicked
-    private void playTurn(Player player) {
-        int x = 0, y = 0, z = 0;
-        Scanner scanner = new Scanner(System.in);
-        scanner.nextLine();
-        //AWAB CODE FOR HANDLING MOUSE INPUT
 
-
-        //Once input is taken in and we have co ordinates for the cell, we use it to set occupant
-        cells[x][y][z].setOccupant(player);
-    }
-    //checkwin will check if, after each player has played at least once already,that they own no cells on the board, which means they have lost. If that is the case the win will be awarded to the other player
-    private boolean CheckWin(Player player1, Player player2) {
-        if(round < 2){
+    private boolean checkWin(Player player1, Player player2) {
+        if (round < 2) {
             return false;
         }
-        if(player1.getNumCells() == 0){
+        if (player1.getNumCells() == 0) {
             winner = player2;
             return true;
-        }
-        else if(player2.getNumCells() == 0){
+        } else if (player2.getNumCells() == 0) {
             winner = player1;
             return true;
         }
         return false;
+    }
+    public static void main(String[] args) throws InterruptedException {
+        // Set up players
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Enter Player 1's name: ");
+        String player1Name = scanner.nextLine();
+        System.out.println("Enter Player 1's color (blue or red): ");
+        String player1Color = scanner.nextLine();
+
+        Player player1 = new Player(player1Name, player1Color);
+
+        System.out.println("Enter Player 2's name: ");
+        String player2Name = scanner.nextLine();
+        System.out.println("Enter Player 2's color (blue or red): ");
+        String player2Color = scanner.nextLine();
+
+        Player player2 = new Player(player2Name, player2Color);
+
+        // Start the game with the players
+        new Game(player1, player2);
     }
 }
