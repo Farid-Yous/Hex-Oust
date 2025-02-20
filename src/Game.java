@@ -27,16 +27,16 @@ public class Game {
     }
 
     private void gameInit() {
-        double size = 30;
-        double originX = 200;
-        double originY = 200;
+        double size = 20;
+        double originX = 600;
+        double originY = 300;
 
         Layout layout = new Layout(Layout.flat, new Point(size, size), new Point(originX, originY));
         ArrayList<ArrayList<Point>> grid = new ArrayList<>();
 
-        for (int q = -3; q <= 3; q++) {
-            for (int r = -3; r <= 3; r++) {
-                for (int s = -3; s <= 3; s++) {
+        for (int q = -6; q <= 6; q++) {
+            for (int r = -6; r <= 6; r++) {
+                for (int s = -6; s <= 6; s++) {
                     if (q + r + s == 0) {
                         HexCube hex = new HexCube(q, r, s);
                         grid.add(layout.polygonCorners(hex));

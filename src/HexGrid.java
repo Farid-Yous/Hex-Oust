@@ -33,6 +33,8 @@ public class HexGrid extends JPanel implements MouseListener {
                 prevX = x;
                 prevY = y;
             }
+            Point last = hex.getLast();
+            g.drawLine(prevX, prevY, (int) Math.round(first.x), (int) Math.round(first.y));
         }
 
         if (selectedHex != null) {
