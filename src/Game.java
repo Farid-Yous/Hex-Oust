@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.util.ArrayList;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.HashMap;
 import java.util.Scanner;
 public class Game {
     private Player player1;
@@ -9,24 +8,24 @@ public class Game {
     private Player currentPlayer;
     private int round;
     private Player winner;
+    private static HashMap<String, HexCube> hexMap = new HashMap<>();
 
     public Game(Player player1, Player player2) throws InterruptedException {
-        this.player1 = player1;
-        this.player2 = player2;
-        gameInit();
-        currentPlayer = player1;
-        while (!checkWin(player1, player2)) {
+        this.player1 = player1;             //player 1 instance
+        this.player2 = player2;             //player 2 instance
+        gameInit();                         //initialise game
+        currentPlayer = player1;            //initialise starting player
+        while (!checkWin(player1, player2)) {           //keep looping until winner
             System.out.println("Current turn: " + currentPlayer.getName());
-            while(!playTurn(currentPlayer)){
+            while(!playTurn(currentPlayer)){               //playturn returns false if the move is invalid
                 System.out.println("Invalid entry, play again " + currentPlayer.getName());
             }
-            changeTurn();
+            changeTurn();                   //change turns
             System.out.println(currentPlayer.getName() + " score is " + currentPlayer.getNumCells());
-
         }
     }
 
-    private void gameInit() {
+    private void gameInit() {               //game initialisation
         double size = 20;
         double originX = 600;
         double originY = 300;
@@ -40,6 +39,7 @@ public class Game {
                     if (q + r + s == 0) {
                         HexCube hex = new HexCube(q, r, s);
                         grid.add(layout.polygonCorners(hex));
+                        hexMap.put(q + "," + r + "," + s, hex);         //hashmapping hexcubes for 0(1) lookup time
                     }
                 }
             }
@@ -54,38 +54,35 @@ public class Game {
     }
 
     private void changeTurn() {
-        currentPlayer = (currentPlayer == player1) ? player2 : player1;
+        currentPlayer = (currentPlayer == player1) ? player2 : player1;         //change turns
     }
 
     private Boolean playTurn(Player player) throws InterruptedException {
-        HexCube cell = HexGrid.clickedHex();
-        System.out.println("Clicked hex: " + cell.q + "," + cell.r + "," + cell.s);
-        System.out.println("Is occupied: " + cell.isOccupied());
-        cell = getCellByCoordinates(cell.q, cell.r, cell.s);
-        if(cell.isOccupied()){
-            return false;  // Return false if the cell is already occupied
+        HexCube clickedCell = HexGrid.clickedHex();         //gets mouse input
+
+        HexCube actualHex = getCellByCoordinates(clickedCell.q, clickedCell.r, clickedCell.s);      //maps input into our hashmap to alter the cells information
+
+        if (actualHex == null) {
+            System.out.println("Hex not found in grid!");
+            return false;
         }
 
-        cell.setOccupant(player);  // Set the current player as the occupant
-        player.addCell();  // Add the cell to the player's score or collection of cells
+        if (actualHex.isOccupied()) {               // checks if occupied
+            System.out.println("Cell is already occupied!");
+            return false;
+        }
+
+        actualHex.setOccupant(player);
+        player.addCell();
         return true;
     }
 
-    // Assuming your grid is a list of lists of HexCube
-    ArrayList<ArrayList<HexCube>> grid = new ArrayList<>();
-
     // Method to find a HexCube by its q, r, s coordinates
     public HexCube getCellByCoordinates(int q, int r, int s) {
-        for (ArrayList<HexCube> row : grid) {
-            for (HexCube hex : row) {
-                if (hex.q == q && hex.r == r && hex.s == s) {
-                    return hex;  // Return the found hex cell
-                }
-            }
-        }
-        return null;  // Return null if no matching cell is found
+        return hexMap.get(q + "," + r + "," + s); // O(1) lookup
     }
 
+    //checks
     private boolean checkWin(Player player1, Player player2) {
         if (round < 2) {
             return false;

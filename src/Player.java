@@ -1,5 +1,3 @@
-import java.util.Scanner;
-
 public class Player {
     private String name;
     private String colour;
@@ -28,13 +26,5 @@ public class Player {
 
     public void addCell() {
         this.numCells = this.numCells + 1;
-    }
-
-    public void getDetails() {
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Please enter player name: ");
-        this.name = sc.nextLine();
-        System.out.print("Please enter player colour (blue or red): ");
-        this.colour = sc.nextLine();
     }
 }

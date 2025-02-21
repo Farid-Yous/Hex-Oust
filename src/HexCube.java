@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 
 class HexCube {
-    private boolean isoccupied = false;
+    private Player occupant;
     public final int q;
     public final int r;
     public final int s;
@@ -25,11 +25,11 @@ class HexCube {
     }
 
     public Boolean isOccupied() {
-        return isoccupied;
+        return occupant != null;
     }
 
     public void setOccupant(Player player) {
-        isoccupied = true;
+        this.occupant = player;
     }
 
     public static HexCube direction(int var0) {
