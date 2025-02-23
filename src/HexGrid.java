@@ -6,7 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class HexGrid extends JPanel implements MouseListener {
-    private static BlockingQueue<HexCube> queue = new LinkedBlockingQueue<>() ;
+    static BlockingQueue<HexCube> queue = new LinkedBlockingQueue<>() ;
     private ArrayList<ArrayList<Point>> grid;
     private Layout layout;
     private HexCube selectedHex = null;
