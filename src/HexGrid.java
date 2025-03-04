@@ -10,45 +10,47 @@ public class HexGrid extends JPanel implements MouseListener {
     private ArrayList<ArrayList<Point>> grid;
     private Layout layout;
     private HexCube selectedHex = null;
+    private ArrayList<HexCube> hexes;
 
-    public HexGrid(ArrayList<ArrayList<Point>> grid, Layout layout) {
-        this.grid = grid;
+    public HexGrid(ArrayList<HexCube> hexes, Layout layout) {
+        this.hexes = hexes;
         this.layout = layout;
         addMouseListener(this);
     }
 
+
+    @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.setColor(Color.BLUE);
-
-        for (ArrayList<Point> hex : grid) {
-            Point first = hex.get(0);
-            int prevX = (int) Math.round(first.x);
-            int prevY = (int) Math.round(first.y);
-
-            for (Point p : hex) {
-                int x = (int) Math.round(p.x);
-                int y = (int) Math.round(p.y);
-                g.drawLine(prevX, prevY, x, y);
-                prevX = x;
-                prevY = y;
-            }
-            Point last = hex.getLast();
-            g.drawLine(prevX, prevY, (int) Math.round(first.x), (int) Math.round(first.y));
-        }
-
-        if (selectedHex != null) {
-            g.setColor(Color.RED);
-            ArrayList<Point> selectedHexPoints = layout.polygonCorners(selectedHex);
+        // Loop over each HexCube in your grid.
+        for (HexCube hex : hexes) {
+            ArrayList<Point> corners = layout.polygonCorners(hex);
             int[] xPoints = new int[6];
             int[] yPoints = new int[6];
             for (int i = 0; i < 6; i++) {
-                xPoints[i] = (int) Math.round(selectedHexPoints.get(i).x);
-                yPoints[i] = (int) Math.round(selectedHexPoints.get(i).y);
+                xPoints[i] = (int) Math.round(corners.get(i).x);
+                yPoints[i] = (int) Math.round(corners.get(i).y);
             }
-            g.fillPolygon(xPoints, yPoints, 6);
+
+            // If the hex is occupied, fill it with the player's color.
+            if (hex.isOccupied()) {
+                String occupantColor = hex.getOccupant().getColour();
+                if (occupantColor.equalsIgnoreCase("red")) {
+                    g.setColor(Color.RED);
+                } else if (occupantColor.equalsIgnoreCase("blue")) {
+                    g.setColor(Color.BLUE);
+                } else {
+                    g.setColor(Color.GRAY); // Fallback for unknown colors.
+                }
+                g.fillPolygon(xPoints, yPoints, 6);
+            }
+
+            // Draw the hexagon outline.
+            g.setColor(Color.BLACK);
+            g.drawPolygon(xPoints, yPoints, 6);
         }
     }
+
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -73,4 +75,5 @@ public class HexGrid extends JPanel implements MouseListener {
     public void mouseEntered(MouseEvent e) {}
     @Override
     public void mouseExited(MouseEvent e) {}
+
 }
