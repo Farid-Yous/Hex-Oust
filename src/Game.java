@@ -33,20 +33,23 @@ public class Game {
         Layout layout = new Layout(Layout.flat, new Point(size, size), new Point(originX, originY));
         ArrayList<ArrayList<Point>> grid = new ArrayList<>();
 
+        ArrayList<HexCube> hexes = new ArrayList<>();
         for (int q = -6; q <= 6; q++) {
             for (int r = -6; r <= 6; r++) {
                 for (int s = -6; s <= 6; s++) {
                     if (q + r + s == 0) {
                         HexCube hex = new HexCube(q, r, s);
-                        grid.add(layout.polygonCorners(hex));
-                        hexMap.put(q + "," + r + "," + s, hex);         //hashmapping hexcubes for 0(1) lookup time
+                        hexes.add(hex);
+                        hexMap.put(q + "," + r + "," + s, hex);
                     }
                 }
             }
         }
 
+
+
         JFrame frame = new JFrame("Hex Grid");
-        HexGrid hexGrid = new HexGrid(grid, layout);
+        HexGrid hexGrid = new HexGrid(hexes, layout);
         frame.add(hexGrid);
         frame.setSize(1200, 1200);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

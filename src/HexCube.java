@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.util.ArrayList;
 
 class HexCube {
@@ -51,4 +52,9 @@ class HexCube {
     public int distance(HexCube other) {
         return this.subtract(other).length();
     }
+    public Player getOccupant() {
+        return occupant;
+    }
+
+
 }
