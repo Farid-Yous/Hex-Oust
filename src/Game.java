@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
 public class Game {
     private Player player1;
@@ -33,20 +34,23 @@ public class Game {
         Layout layout = new Layout(Layout.flat, new Point(size, size), new Point(originX, originY));
         ArrayList<ArrayList<Point>> grid = new ArrayList<>();
 
+        ArrayList<HexCube> hexes = new ArrayList<>();
         for (int q = -6; q <= 6; q++) {
             for (int r = -6; r <= 6; r++) {
                 for (int s = -6; s <= 6; s++) {
                     if (q + r + s == 0) {
                         HexCube hex = new HexCube(q, r, s);
-                        grid.add(layout.polygonCorners(hex));
-                        hexMap.put(q + "," + r + "," + s, hex);         //hashmapping hexcubes for 0(1) lookup time
+                        hexes.add(hex);
+                        hexMap.put(q + "," + r + "," + s, hex);
                     }
                 }
             }
         }
 
+
+
         JFrame frame = new JFrame("Hex Grid");
-        HexGrid hexGrid = new HexGrid(grid, layout);
+        HexGrid hexGrid = new HexGrid(hexes, layout);
         frame.add(hexGrid);
         frame.setSize(1200, 1200);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -58,31 +62,91 @@ public class Game {
     }
 
     private Boolean playTurn(Player player) throws InterruptedException {
-        HexCube clickedCell = HexGrid.clickedHex();         //gets mouse input
-
-        HexCube actualHex = getCellByCoordinates(clickedCell.q, clickedCell.r, clickedCell.s);      //maps input into our hashmap to alter the cells information
+        HexCube clickedCell = HexGrid.clickedHex();
+        HexCube actualHex = getCellByCoordinates(clickedCell.q, clickedCell.r, clickedCell.s);
 
         if (actualHex == null) {
             System.out.println("Hex not found in grid!");
             return false;
         }
 
-        if (actualHex.isOccupied()) {               // checks if occupied
+        if (actualHex.isOccupied()) {
             System.out.println("Cell is already occupied!");
             return false;
         }
 
         actualHex.setOccupant(player);
         player.addCell();
+        /*
+        MOVE PLACEMENT
+
+         */
+        for (HexCube direction : HexCube.directions) { //checking all neighbouring cells
+            HexCube neighbor = getCellByCoordinates(
+                    actualHex.q + direction.q,
+                    actualHex.r + direction.r,
+                    actualHex.s + direction.s
+            );
+
+            if (neighbor != null && neighbor.isOccupied() && neighbor.getOccupant() == player && !player.isInGroup(actualHex)) { //if neighbouring cell belongs to player add to the group
+                player.addToGroup(actualHex, neighbor);
+            }
+            if (neighbor != null && neighbor.isOccupied() && neighbor.getOccupant() == player && player.isInGroup(actualHex)) {
+                Player.mergePlayerGroups(player1,actualHex,player1,neighbor);
+            }
+        }
+        if(actualHex.getOccupant().isInGroup(actualHex) == false){  //if the cell isnt in a group, form a new group with it being the only member
+            actualHex.getOccupant().newGroup(actualHex);
+        }
+
+        /*
+        CAPTURING PLACEMENT
+         */
+        capturingPlacement(actualHex);
+
+        player.printGroups();
+
         return true;
     }
+public int capturingPlacement(HexCube actualHex) {
+    Player otherPlayer = currentPlayer == player1 ? player2 : player1;
+    for (HexCube direction : HexCube.directions) {
+        HexCube neighbor = getCellByCoordinates(
+                actualHex.q + direction.q,
+                actualHex.r + direction.r,
+                actualHex.s + direction.s
+        );
 
+        if (neighbor != null && neighbor.isOccupied() && neighbor.getOccupant() == otherPlayer) {
+            if (currentPlayer.getGroupSize(actualHex) > otherPlayer.getGroupSize(neighbor)) {
+                int n = otherPlayer.getGroupSize(neighbor);
+                Player.mergePlayerGroups(currentPlayer, actualHex, otherPlayer, neighbor);
+                currentPlayer.addCell(n);
+                otherPlayer.addCell(-n);
+                System.out.println("capturing placement, play again!");
+                return 1;
+            }
+            if (currentPlayer.getGroupSize(actualHex) < otherPlayer.getGroupSize(neighbor)) {
+                int n = otherPlayer.getGroupSize(neighbor);
+                Player.mergePlayerGroups(otherPlayer, neighbor, currentPlayer, actualHex);
+                currentPlayer.addCell(-n);
+                otherPlayer.addCell(n);
+                System.out.println("capturing placement, play again!");
+                return 1;
+            }
+
+        }
+
+
+    }
+    return 0;
+}
     // Method to find a HexCube by its q, r, s coordinates
     public HexCube getCellByCoordinates(int q, int r, int s) {
         return hexMap.get(q + "," + r + "," + s); // O(1) lookup
     }
 
-    //checks
+    //checks for win condition
     private boolean checkWin(Player player1, Player player2) {
         if (round < 2) {
             return false;
