@@ -27,5 +27,4 @@ public class Player {
     public void addCell() {
         this.numCells = this.numCells + 1;
     }
-
 }

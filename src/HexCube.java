@@ -29,6 +29,10 @@ class HexCube {
         return occupant != null;
     }
 
+    public Player getOccupant(){
+        return occupant;
+    }
+
     public void setOccupant(Player player) {
         this.occupant = player;
     }
@@ -48,7 +52,10 @@ class HexCube {
     public int length() {
         return (Math.abs(this.q) + Math.abs(this.r) + Math.abs(this.s)) / 2;
     }
-
+    @Override
+    public String toString() {
+        return q + " " + r + " " + s;
+    }
     public int distance(HexCube other) {
         return this.subtract(other).length();
     }
