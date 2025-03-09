@@ -1,4 +1,3 @@
-import javax.swing.*;
 import java.util.ArrayList;
 
 class HexCube {
@@ -27,10 +26,6 @@ class HexCube {
 
     public Boolean isOccupied() {
         return occupant != null;
-    }
-
-    public Player getOccupant(){
-        return occupant;
     }
 
     public void setOccupant(Player player) {

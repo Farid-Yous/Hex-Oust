@@ -108,39 +108,61 @@ public class Game {
 
         return true;
     }
-public int capturingPlacement(HexCube actualHex) {
-    Player otherPlayer = currentPlayer == player1 ? player2 : player1;
-    for (HexCube direction : HexCube.directions) {
-        HexCube neighbor = getCellByCoordinates(
-                actualHex.q + direction.q,
-                actualHex.r + direction.r,
-                actualHex.s + direction.s
-        );
-
-        if (neighbor != null && neighbor.isOccupied() && neighbor.getOccupant() == otherPlayer) {
-            if (currentPlayer.getGroupSize(actualHex) > otherPlayer.getGroupSize(neighbor)) {
-                int n = otherPlayer.getGroupSize(neighbor);
-                Player.mergePlayerGroups(currentPlayer, actualHex, otherPlayer, neighbor);
-                currentPlayer.addCell(n);
-                otherPlayer.addCell(-n);
-                System.out.println("capturing placement, play again!");
-                return 1;
-            }
-            if (currentPlayer.getGroupSize(actualHex) < otherPlayer.getGroupSize(neighbor)) {
-                int n = otherPlayer.getGroupSize(neighbor);
-                Player.mergePlayerGroups(otherPlayer, neighbor, currentPlayer, actualHex);
-                currentPlayer.addCell(-n);
-                otherPlayer.addCell(n);
-                System.out.println("capturing placement, play again!");
-                return 1;
-            }
-
+    public void capturingPlacement(HexCube actualHex) {
+        Player enemy = (currentPlayer == player1) ? player2 : player1;
+        // gets the group of the current hex
+        Integer myGroupId = currentPlayer.getGroupId(actualHex);
+        if (myGroupId == null) {
+            return;
         }
+        HashSet<HexCube> myGroup = currentPlayer.groups.get(myGroupId);
 
+        boolean capturedSomething = false;
+
+        // we loop through the vicinity of the group checking for each enemy group around the current group
+        boolean captureOccurred;
+        do {
+            captureOccurred = false;
+            // recalculate adjacent enemy groups based on the updated group
+            HashSet<Integer> adjacentEnemyGroupIds = new HashSet<>();
+            for (HexCube hex : myGroup) {
+                for (HexCube direction : HexCube.directions) {
+                    HexCube neighbor = getCellByCoordinates(
+                            hex.q + direction.q,
+                            hex.r + direction.r,
+                            hex.s + direction.s
+                    );
+                    if (neighbor != null && neighbor.isOccupied() && neighbor.getOccupant() == enemy) {
+                        Integer enemyGroupId = enemy.getGroupId(neighbor);
+                        if (enemyGroupId != null) {
+                            adjacentEnemyGroupIds.add(enemyGroupId);
+                        }
+                    }
+                }
+            }
+
+            // go through each enemy group
+            for (Integer enemyGroupId : adjacentEnemyGroupIds) {
+                HashSet<HexCube> enemyGroup = enemy.groups.get(enemyGroupId);
+                if (enemyGroup == null) continue;
+                if (myGroup.size() > enemyGroup.size()) {
+                    // capture the enemies group
+                    int n = enemyGroup.size();
+                    HexCube enemyRepresentative = enemyGroup.iterator().next();
+                    Player.mergePlayerGroups(currentPlayer, actualHex, enemy, enemyRepresentative);
+                    currentPlayer.addCell(n);
+                    enemy.addCell(-n);
+                    System.out.println("Capturing placement: captured an enemy group!");
+                    captureOccurred = true;
+                    capturedSomething = true;
+                    myGroup = currentPlayer.groups.get(currentPlayer.getGroupId(actualHex));
+                }
+            }
+        } while (captureOccurred);
 
     }
-    return 0;
-}
+
+
     // Method to find a HexCube by its q, r, s coordinates
     public HexCube getCellByCoordinates(int q, int r, int s) {
         return hexMap.get(q + "," + r + "," + s); // O(1) lookup
