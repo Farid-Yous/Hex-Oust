@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
+@SuppressWarnings("ClassEscapesDefinedScope")
 public class Game {
     private Player player1;
     private Player player2;
@@ -23,9 +24,9 @@ public class Game {
                 System.out.println("Invalid entry, play again " + currentPlayer.getName());
             }
             System.out.println("capture occured: "+ capture);
-            if(capture){
+            if(this.capture){
                 System.out.println("play turn again, captured enemy");
-                while(capture){
+                while(this.capture){
                     playTurn(currentPlayer);
                 }
             }
@@ -104,22 +105,24 @@ public class Game {
                 Player.mergePlayerGroups(player1,actualHex,player1,neighbor);
             }
         }
-        if(actualHex.getOccupant().isInGroup(actualHex) == false){  //if the cell isnt in a group, form a new group with it being the only member
+        if(!actualHex.getOccupant().isInGroup(actualHex)){  //if the cell isnt in a group, form a new group with it being the only member
             actualHex.getOccupant().newGroup(actualHex);
         }
 
         /*
         CAPTURING PLACEMENT
          */
-        capturingPlacement(actualHex);
+        if(capturingPlacement(actualHex) == true){
+            this.capture = true;
+        }
 
         player.printGroups();
 
         return true;
     }
-    public void capturingPlacement(HexCube actualHex) throws InterruptedException {
+    public boolean capturingPlacement(HexCube actualHex) throws InterruptedException {
+        this.capture = false;
         Player enemy = (currentPlayer == player1) ? player2 : player1;
-        capture = false;
         // First, check if the newly placed cell should be captured
         HashSet<Integer> surroundingEnemyGroupIds = new HashSet<>();
         for (HexCube direction : HexCube.directions) {
@@ -153,18 +156,17 @@ public class Game {
 
                 // mergee the groups
                 Player.mergePlayerGroups(enemy, enemyGroup.iterator().next(), currentPlayer, actualHex);
-                return;
+                return false;
             }
         }
         Integer myGroupId = currentPlayer.getGroupId(actualHex);
         if (myGroupId == null) {
-            return;
+            return false;
         }
         HashSet<HexCube> myGroup = currentPlayer.groups.get(myGroupId);
-
-        boolean captureOccurred;
-        do {
-            captureOccurred = false;
+        boolean captureOccured = true;
+        while (captureOccured) {
+            captureOccured = false;
             HashSet<Integer> adjacentEnemyGroupIds = new HashSet<>();
 
             // find all neighbouring enemy groups
@@ -189,7 +191,8 @@ public class Game {
             for (Integer enemyGroupId : adjacentEnemyGroupIds) {
                 HashSet<HexCube> enemyGroup = enemy.groups.get(enemyGroupId);
                 if (enemyGroup != null && myGroup.size() > enemyGroup.size()) {
-                    capture = true;
+                    captureOccured = true;
+                    this.capture = true;
                     // Capture the enemy group
                     for (HexCube capturedCell : enemyGroup) {
                         capturedCell.setOccupant(currentPlayer);
@@ -200,13 +203,11 @@ public class Game {
 
                     // call merge function to sort out the group organisation
                     Player.mergePlayerGroups(currentPlayer, actualHex, enemy, enemyGroup.iterator().next());
-                    captureOccurred = true;
-                    capture = true;
                     myGroup = currentPlayer.groups.get(currentPlayer.getGroupId(actualHex));
                 }
             }
-        } while (captureOccurred);
-
+        }
+    return this.capture;
     }
     // Method to find a HexCube by its q, r, s coordinates
     public HexCube getCellByCoordinates(int q, int r, int s) {
