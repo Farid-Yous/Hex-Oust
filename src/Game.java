@@ -10,6 +10,7 @@ public class Game {
     private int round;
     private Player winner;
     private static HashMap<String, HexCube> hexMap = new HashMap<>();
+    public boolean capture;
 
     public Game(Player player1, Player player2) throws InterruptedException {
         this.player1 = player1;             //player 1 instance
@@ -20,6 +21,13 @@ public class Game {
             System.out.println("Current turn: " + currentPlayer.getName());
             while(!playTurn(currentPlayer)){               //playturn returns false if the move is invalid
                 System.out.println("Invalid entry, play again " + currentPlayer.getName());
+            }
+            System.out.println("capture occured: "+ capture);
+            if(capture){
+                System.out.println("play turn again, captured enemy");
+                while(capture){
+                    playTurn(currentPlayer);
+                }
             }
             changeTurn();                   //change turns
             System.out.println(currentPlayer.getName() + " score is " + currentPlayer.getNumCells());
@@ -34,7 +42,6 @@ public class Game {
         double originY = 300;
 
         Layout layout = new Layout(Layout.flat, new Point(size, size), new Point(originX, originY));
-        ArrayList<ArrayList<Point>> grid = new ArrayList<>();
 
         ArrayList<HexCube> hexes = new ArrayList<>();
         for (int q = -6; q <= 6; q++) {
@@ -110,9 +117,9 @@ public class Game {
 
         return true;
     }
-    public void capturingPlacement(HexCube actualHex) {
+    public void capturingPlacement(HexCube actualHex) throws InterruptedException {
         Player enemy = (currentPlayer == player1) ? player2 : player1;
-
+        capture = false;
         // First, check if the newly placed cell should be captured
         HashSet<Integer> surroundingEnemyGroupIds = new HashSet<>();
         for (HexCube direction : HexCube.directions) {
@@ -174,14 +181,15 @@ public class Game {
                         if (enemyGroupId != null) {
                             adjacentEnemyGroupIds.add(enemyGroupId);
                         }
+
                     }
                 }
             }
-
             // Process captures
             for (Integer enemyGroupId : adjacentEnemyGroupIds) {
                 HashSet<HexCube> enemyGroup = enemy.groups.get(enemyGroupId);
                 if (enemyGroup != null && myGroup.size() > enemyGroup.size()) {
+                    capture = true;
                     // Capture the enemy group
                     for (HexCube capturedCell : enemyGroup) {
                         capturedCell.setOccupant(currentPlayer);
@@ -193,10 +201,12 @@ public class Game {
                     // call merge function to sort out the group organisation
                     Player.mergePlayerGroups(currentPlayer, actualHex, enemy, enemyGroup.iterator().next());
                     captureOccurred = true;
+                    capture = true;
                     myGroup = currentPlayer.groups.get(currentPlayer.getGroupId(actualHex));
                 }
             }
         } while (captureOccurred);
+
     }
     // Method to find a HexCube by its q, r, s coordinates
     public HexCube getCellByCoordinates(int q, int r, int s) {
