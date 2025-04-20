@@ -118,12 +118,4 @@ public class Player {
         this.numCells += n;
     }
 
-    public void printGroups() {
-        for (HashMap.Entry<Integer, HashSet<HexCube>> entry : groups.entrySet()) {
-            System.out.println("Group " + entry.getKey() + ":");
-            for (HexCube cell : entry.getValue()) {
-                System.out.println("  " + cell);
-            }
-            System.out.println();
-        }
-    }}
+    }

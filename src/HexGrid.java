@@ -58,7 +58,6 @@ public class HexGrid extends JPanel implements MouseListener {
         int mouseY = e.getY();
         FractionalHexCube fractionalHex = layout.pixelToHex(new Point(mouseX, mouseY));
         selectedHex = fractionalHex.hexRound();
-        System.out.println("Clicked Hex: " + selectedHex.q + ", " + selectedHex.r + ", " + selectedHex.s);
         HexGrid.queue.offer(selectedHex);
         repaint();
     }

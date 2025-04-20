@@ -1,8 +1,14 @@
 import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Scanner;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.stage.Stage;
+
 public class Game {
     private Player player1;
     private Player player2;
@@ -10,29 +16,76 @@ public class Game {
     private int round;
     private Player winner;
     private static HashMap<String, HexCube> hexMap = new HashMap<>();
+    private JFrame frame;  // Reference to the game window for disposal
 
-    public Game(Player player1, Player player2) throws InterruptedException {
-        this.player1 = player1;             //player 1 instance
-        this.player2 = player2;             //player 2 instance
-        gameInit();                         //initialise game
-        currentPlayer = player1;            //initialise starting player
-        while (!checkWin(player1, player2)) {           //keep looping until winner
-            System.out.println("Current turn: " + currentPlayer.getName());
-            while(!playTurn(currentPlayer)){               //playturn returns false if the move is invalid
-                System.out.println("Invalid entry, play again " + currentPlayer.getName());
+    public Game(Player p1, Player p2) throws InterruptedException {
+        this.player1 = p1; //player 1 instance
+        this.player2 = p2; //player 2 instance
+        round = 0;
+        gameInit();
+        currentPlayer = player1;
+
+        //Wont exit loop until a win condition is met
+        while (true) {
+
+            //loop that keeps calling playturn till a valid move is made
+            do{
+            } while (!playTurn(currentPlayer));
+
+            //once a valid move is made switch to the other player
+            changeTurn();
+            round++;
+
+            //checking if win condition has been met
+            if (checkWin()) {
+
+                //bringing up a screen with the winner, play again and exit buttons
+                final String message = (winner != null)
+                        ? winner.getName() + " wins!"
+                        : "It's a tie!";
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(AlertType.CONFIRMATION);
+                    alert.setTitle("Game Over");
+                    alert.setHeaderText(message);
+
+                    ButtonType playAgainBtn = new ButtonType("Play Again");
+                    ButtonType exitBtn = new ButtonType("Exit");
+                    alert.getButtonTypes().setAll(playAgainBtn, exitBtn);
+
+                    //logic that handles a users choice, weather to end game or start a new one
+                    alert.showAndWait().ifPresent(response -> {
+                        if (response == playAgainBtn) {
+                            // If its play again close the old tab and start a new one
+                            SwingUtilities.invokeLater(() -> {
+                                if (frame != null) {
+                                    frame.dispose();
+                                }
+                            });
+                            // Restart javafx launcher
+                            try {
+                                new HexoustLauncherFX().start(new Stage());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            // otherwise exit game
+                            Platform.exit();
+                            System.exit(0);
+                        }
+                    });
+                });
+                break;
             }
-            changeTurn();                   //change turns
-            System.out.println(currentPlayer.getName() + " score is " + currentPlayer.getNumCells());
         }
     }
 
-    private void gameInit() {               //game initialisation
+    private void gameInit() {
+        // Setup hex grid data
         double size = 20;
         double originX = 600;
         double originY = 300;
 
         Layout layout = new Layout(Layout.flat, new Point(size, size), new Point(originX, originY));
-        ArrayList<ArrayList<Point>> grid = new ArrayList<>();
 
         ArrayList<HexCube> hexes = new ArrayList<>();
         for (int q = -6; q <= 6; q++) {
@@ -46,84 +99,65 @@ public class Game {
                 }
             }
         }
+        // Create Swing window
+        SwingUtilities.invokeLater(() -> {
+            frame = new JFrame("Hex Grid");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+            HexGrid hexGrid = new HexGrid(hexes, layout);
+            hexGrid.setPreferredSize(new Dimension(1200, 1200));
 
-
-        JFrame frame = new JFrame("Hex Grid");
-        HexGrid hexGrid = new HexGrid(hexes, layout);
-        frame.add(hexGrid);
-        frame.setSize(1200, 1200);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);
+            frame.add(hexGrid);
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
     }
 
     private void changeTurn() {
-        currentPlayer = (currentPlayer == player1) ? player2 : player1;         //change turns
+        currentPlayer = (currentPlayer == player1) ? player2 : player1;
     }
 
     private Boolean playTurn(Player player) throws InterruptedException {
         HexCube clickedCell = HexGrid.clickedHex();
         HexCube actualHex = getCellByCoordinates(clickedCell.q, clickedCell.r, clickedCell.s);
-
-        if (actualHex == null) {
-            System.out.println("Hex not found in grid!");
+        if (actualHex == null || actualHex.isOccupied()) {
             return false;
         }
-
-        if (actualHex.isOccupied()) {
-            System.out.println("Cell is already occupied!");
-            return false;
-        }
-
         actualHex.setOccupant(player);
         player.addCell();
-        /*
-        MOVE PLACEMENT
-
-         */
-        for (HexCube direction : HexCube.directions) { //checking all neighbouring cells
+        // MOVE PLACEMENT
+        for (HexCube direction : HexCube.directions) {
             HexCube neighbor = getCellByCoordinates(
                     actualHex.q + direction.q,
                     actualHex.r + direction.r,
                     actualHex.s + direction.s
             );
-
-            if (neighbor != null && neighbor.isOccupied() && neighbor.getOccupant() == player && !player.isInGroup(actualHex)) { //if neighbouring cell belongs to player add to the group
-                player.addToGroup(actualHex, neighbor);
-            }
-            if (neighbor != null && neighbor.isOccupied() && neighbor.getOccupant() == player && player.isInGroup(actualHex)) {
-                Player.mergePlayerGroups(player1,actualHex,player1,neighbor);
+            if (neighbor != null && neighbor.isOccupied() && neighbor.getOccupant() == player) {
+                if (!player.isInGroup(actualHex)) {
+                    player.addToGroup(actualHex, neighbor);
+                } else {
+                    Player.mergePlayerGroups(player1, actualHex, player1, neighbor);
+                }
             }
         }
-        if(actualHex.getOccupant().isInGroup(actualHex) == false){  //if the cell isnt in a group, form a new group with it being the only member
+        if (!actualHex.getOccupant().isInGroup(actualHex)) {
             actualHex.getOccupant().newGroup(actualHex);
         }
-
-        /*
-        CAPTURING PLACEMENT
-         */
+        // CAPTURING PLACEMENT
         capturingPlacement(actualHex);
-
-        player.printGroups();
 
         return true;
     }
+
     public void capturingPlacement(HexCube actualHex) {
         Player enemy = (currentPlayer == player1) ? player2 : player1;
-        // gets the group of the current hex
         Integer myGroupId = currentPlayer.getGroupId(actualHex);
-        if (myGroupId == null) {
-            return;
-        }
+        if (myGroupId == null) return;
         HashSet<HexCube> myGroup = currentPlayer.groups.get(myGroupId);
-
-        boolean capturedSomething = false;
-
-        // we loop through the vicinity of the group checking for each enemy group around the current group
         boolean captureOccurred;
         do {
             captureOccurred = false;
-            // recalculate adjacent enemy groups based on the updated group
             HashSet<Integer> adjacentEnemyGroupIds = new HashSet<>();
             for (HexCube hex : myGroup) {
                 for (HexCube direction : HexCube.directions) {
@@ -134,73 +168,42 @@ public class Game {
                     );
                     if (neighbor != null && neighbor.isOccupied() && neighbor.getOccupant() == enemy) {
                         Integer enemyGroupId = enemy.getGroupId(neighbor);
-                        if (enemyGroupId != null) {
-                            adjacentEnemyGroupIds.add(enemyGroupId);
-                        }
+                        if (enemyGroupId != null) adjacentEnemyGroupIds.add(enemyGroupId);
                     }
                 }
             }
-
-            // go through each enemy group
             for (Integer enemyGroupId : adjacentEnemyGroupIds) {
                 HashSet<HexCube> enemyGroup = enemy.groups.get(enemyGroupId);
-                if (enemyGroup == null) continue;
-                if (myGroup.size() > enemyGroup.size()) {
-                    // capture the enemies group
+                if (enemyGroup != null && myGroup.size() > enemyGroup.size()) {
                     int n = enemyGroup.size();
-                    HexCube enemyRepresentative = enemyGroup.iterator().next();
-                    Player.mergePlayerGroups(currentPlayer, actualHex, enemy, enemyRepresentative);
+                    HexCube representative = enemyGroup.iterator().next();
+                    Player.mergePlayerGroups(currentPlayer, actualHex, enemy, representative);
                     currentPlayer.addCell(n);
                     enemy.addCell(-n);
-                    System.out.println("Capturing placement: captured an enemy group!");
                     captureOccurred = true;
-                    capturedSomething = true;
                     myGroup = currentPlayer.groups.get(currentPlayer.getGroupId(actualHex));
                 }
             }
         } while (captureOccurred);
-
     }
 
-
-    // Method to find a HexCube by its q, r, s coordinates
     public HexCube getCellByCoordinates(int q, int r, int s) {
-        return hexMap.get(q + "," + r + "," + s); // O(1) lookup
+        return hexMap.get(q + "," + r + "," + s);
     }
 
-    //checks for win condition
-    private boolean checkWin(Player player1, Player player2) {
-        if (round < 2) {
-            return false;
+    private boolean checkWin() {
+        if (round >= 2) {
+            if (player1.getNumCells() == 0) { winner = player2; return true; }
+            if (player2.getNumCells() == 0) { winner = player1; return true; }
         }
-        if (player1.getNumCells() == 0) {
-            winner = player2;
-            return true;
-        } else if (player2.getNumCells() == 0) {
-            winner = player1;
+        boolean allOccupied = hexMap.values().stream().allMatch(HexCube::isOccupied);
+        if (allOccupied) {
+            int c1 = player1.getNumCells(), c2 = player2.getNumCells();
+            if (c1 > c2) winner = player1;
+            else if (c2 > c1) winner = player2;
+            else winner = null;
             return true;
         }
         return false;
-    }
-    public static void main(String[] args) throws InterruptedException {
-        // Set up players
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("Enter Player 1's name: ");
-        String player1Name = scanner.nextLine();
-        System.out.println("Enter Player 1's color (blue or red): ");
-        String player1Color = scanner.nextLine();
-
-        Player player1 = new Player(player1Name, player1Color);
-
-        System.out.println("Enter Player 2's name: ");
-        String player2Name = scanner.nextLine();
-        System.out.println("Enter Player 2's color (blue or red): ");
-        String player2Color = scanner.nextLine();
-
-        Player player2 = new Player(player2Name, player2Color);
-
-        // Start the game with the players
-        new Game(player1, player2);
     }
 }
