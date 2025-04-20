@@ -91,14 +91,7 @@ public class Player {
         }
     }
 
-    public int getGroupSize(HexCube cell){
-        for(HashSet<HexCube> group : groups.values()){
-            if(group.contains(cell)){
-                return group.size();
-            }
-        }
-        return 0;
-    }
+
     public String getName() {
         return name;
     }
