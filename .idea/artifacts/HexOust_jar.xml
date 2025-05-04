@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="HexOust:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/HexOust_jar</output-path>
+    <root id="archive" name="HexOust.jar">
+      <element id="module-output" name="HexOust" />
+      <element id="library" level="project" name="javafx-sdk-23.0" />
+    </root>
+  </artifact>
+</component>
