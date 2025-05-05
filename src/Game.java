@@ -10,6 +10,7 @@ import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 
 public class Game {
+    boolean captureOccurred;
     private Player player1;
     private Player player2;
     private Player currentPlayer;
@@ -40,11 +41,7 @@ public class Game {
                 Thread.sleep(10);
             }
 
-            // after a successful move, swap turns and increment round
-            changeTurn();
-            round++;
-
-            // check for win
+            // check for win after every move
             if (checkWin()) {
                 final String message = (winner != null)
                         ? winner.getName() + " wins!"
@@ -80,6 +77,17 @@ public class Game {
                 });
                 break;
             }
+
+            // if no capture occurred, change turns
+            if (!captureOccurred) {
+                changeTurn();
+            } else {
+                // Reset capture flag for next turn
+                captureOccurred = false;
+                // Update the turn indicator to show it's still the same player's turn
+                updateTurnIndicator();
+            }
+            round++;
         }
     }
 
@@ -148,7 +156,7 @@ public class Game {
         // get the hex user clicked on
         HexCube clickedCell = HexGrid.clickedHex();
         if (clickedCell == null) return false;
-
+        //replace the clicked hex with the actual cell in our hashmap
         HexCube actualHex = getCellByCoordinates(
                 clickedCell.q,
                 clickedCell.r,
@@ -191,9 +199,23 @@ public class Game {
         capturingPlacement(actualHex);
         return true;
     }
-
+    /**
+     * Handles the complex capture mechanics after a piece is placed.
+     * This method implements two types of captures:
+     * 1. Whether it will be captured upon placement by an adjacent opponent group larger than itself
+     * 2. Whether it will capture an adjacent opponent group smaller than itself
+     *
+     *
+     * The capture rules are:
+     * - Larger groups can capture smaller adjacent groups
+     * - Turns aren't swapped when a player captures an opponent group
+     * - If the placed piece's group is captured, no further captures are checked
+     *
+     * @param actualHex The hex that was just placed
+     */
     private void capturingPlacement(HexCube actualHex) {
         Player enemy = (currentPlayer == player1) ? player2 : player1;
+        captureOccurred = false;  // Reset at start of capture check
 
         // first check if the newly placed group is captured
         HashSet<Integer> surroundingEnemy = new HashSet<>();
@@ -222,6 +244,7 @@ public class Game {
                         currentPlayer,
                         actualHex
                 );
+                // Don't set captureOccurred to true here since the current player got captured
                 return;
             }
         }
@@ -260,6 +283,7 @@ public class Game {
                             eg.iterator().next()
                     );
                     repeat = true;
+                    captureOccurred = true;  // Set to true only when current player captures enemy stones
                     myGroup = currentPlayer.groups
                             .get(currentPlayer.getGroupId(actualHex));
                 }
@@ -267,13 +291,15 @@ public class Game {
         } while (repeat);
     }
 
+    //returns the hexcell from hashmap from its co ordinates
     private HexCube getCellByCoordinates(int q, int r, int s) {
         return hexMap.get(q + "," + r + "," + s);
     }
 
+    //checks for a win
     private boolean checkWin() {
-        if (round >= 2) {
-            if (player1.getNumCells() == 0) {
+        if (round >= 2) {  //dont check for a win when both players havent played yet
+            if (player1.getNumCells() == 0) { //if either player has 0 cells after already playing, theyve lost
                 winner = player2;
                 return true;
             }
@@ -282,17 +308,9 @@ public class Game {
                 return true;
             }
         }
-        boolean all = hexMap.values().stream().allMatch(HexCube::isOccupied);
-        if (all) {
-            int c1 = player1.getNumCells(), c2 = player2.getNumCells();
-            if (c1 > c2) winner = player1;
-            else if (c2 > c1) winner = player2;
-            else winner = null;
-            return true;
-        }
         return false;
     }
-
+//helper function for updateTurnIndicator
     private Color awtColorFromPlayer(Player p) {
         switch (p.getColour().toLowerCase()) {
             case "red":
@@ -303,7 +321,7 @@ public class Game {
                 return Color.GRAY;
         }
     }
-
+//updates the turn indicator at the top of the screen
     private void updateTurnIndicator() {
         SwingUtilities.invokeLater(() -> {
             if (turnIndicator == null || currentPlayer == null) return;

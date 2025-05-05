@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="HexOust:jar2">
-    <output-path>$PROJECT_DIR$/out/artifacts/HexOust_jar2</output-path>
-    <root id="archive" name="HexOust.jar">
-      <element id="module-output" name="HexOust" />
-    </root>
-  </artifact>
-</component>

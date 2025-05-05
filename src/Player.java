@@ -58,10 +58,17 @@ public class Player {
         newGroup.add(cell);
         groups.put(nextGroupId++, newGroup);
     }
-    /*
-     Merge player group takes 4 arguments, player1 and its cell, and player 2 and its cell. The groups of the cells will be merged together.
-     The 2 player arguments can be the same player, this allows us to merge groups of the same player
-     The group will be occupied by the first player argument
+    /**
+     * merges two groups of hexes together
+     *
+     * @param player1 The player who will own the merged group
+     * @param cell1   A hex from player 1
+     * @param player2 player that owns cell to be merged
+     * @param cell2   hex that was adjacent to the cell1 that will be merged
+     *
+     * @implNote If player1 and player2 are different, all hexes from player2's
+     *          group will be transferred to player1's ownership. If they're the
+     *          same player this combines the two groups from the same player.
      */
     public static void mergePlayerGroups(Player player1, HexCube cell1, Player player2, HexCube cell2) {
         Integer group1Id = player1.getGroupId(cell1);
