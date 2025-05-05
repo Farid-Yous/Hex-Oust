@@ -6,6 +6,9 @@ class HexCube {
     public final int r;
     public final int s;
 
+    /*
+    Directions is an Iterable list of all the cells adjacent to the current cell.
+     */
     public static ArrayList<HexCube> directions = new ArrayList<HexCube>() {{
         add(new HexCube(1, 0, -1));
         add(new HexCube(1, -1, 0));
@@ -28,10 +31,6 @@ class HexCube {
         return occupant != null;
     }
 
-    public Player getOccupant(){
-        return occupant;
-    }
-
     public void setOccupant(Player player) {
         this.occupant = player;
     }
@@ -51,11 +50,17 @@ class HexCube {
     public int length() {
         return (Math.abs(this.q) + Math.abs(this.r) + Math.abs(this.s)) / 2;
     }
+
     @Override
     public String toString() {
         return q + " " + r + " " + s;
     }
+
     public int distance(HexCube other) {
         return this.subtract(other).length();
+    }
+
+    public Player getOccupant() {
+        return occupant;
     }
 }

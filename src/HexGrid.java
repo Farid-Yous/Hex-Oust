@@ -6,7 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class HexGrid extends JPanel implements MouseListener {
-    static BlockingQueue<HexCube> queue = new LinkedBlockingQueue<>() ;
+    private static BlockingQueue<HexCube> queue = new LinkedBlockingQueue<>();
     private ArrayList<ArrayList<Point>> grid;
     private Layout layout;
     private HexCube selectedHex = null;
@@ -52,13 +52,15 @@ public class HexGrid extends JPanel implements MouseListener {
     }
 
 
+    /*
+    mouseclicked allows us to map a mouse click to a cell then to be used in out getcellbycoordinates() class
+     */
     @Override
     public void mouseClicked(MouseEvent e) {
         int mouseX = e.getX();
         int mouseY = e.getY();
         FractionalHexCube fractionalHex = layout.pixelToHex(new Point(mouseX, mouseY));
         selectedHex = fractionalHex.hexRound();
-        System.out.println("Clicked Hex: " + selectedHex.q + ", " + selectedHex.r + ", " + selectedHex.s);
         HexGrid.queue.offer(selectedHex);
         repaint();
     }
@@ -68,12 +70,18 @@ public class HexGrid extends JPanel implements MouseListener {
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {}
-    @Override
-    public void mouseReleased(MouseEvent e) {}
-    @Override
-    public void mouseEntered(MouseEvent e) {}
-    @Override
-    public void mouseExited(MouseEvent e) {}
+    public void mousePressed(MouseEvent e) {
+    }
 
+    @Override
+    public void mouseReleased(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+    }
 }
