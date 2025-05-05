@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 import java.util.ArrayList;
 
 class Layout {
@@ -19,8 +14,8 @@ class Layout {
 
     public Point hexToPixel(HexCube var1) {
         Orientation var2 = this.orientation;
-        double var3 = (var2.f0 * (double)var1.q + var2.f1 * (double)var1.r) * this.size.x;
-        double var5 = (var2.f2 * (double)var1.q + var2.f3 * (double)var1.r) * this.size.y;
+        double var3 = (var2.f0 * (double) var1.q + var2.f1 * (double) var1.r) * this.size.x;
+        double var5 = (var2.f2 * (double) var1.q + var2.f3 * (double) var1.r) * this.size.y;
         return new Point(var3 + this.origin.x, var5 + this.origin.y);
     }
 
@@ -34,7 +29,7 @@ class Layout {
 
     public Point hexCornerOffset(int var1) {
         Orientation var2 = this.orientation;
-        double var3 = 6.283185307179586 * (var2.start_angle - (double)var1) / 6.0;
+        double var3 = 6.283185307179586 * (var2.start_angle - (double) var1) / 6.0;
         return new Point(this.size.x * Math.cos(var3), this.size.y * Math.sin(var3));
     }
 
@@ -43,7 +38,7 @@ class Layout {
         };
         Point var3 = this.hexToPixel(var1);
 
-        for(int var4 = 0; var4 < 6; ++var4) {
+        for (int var4 = 0; var4 < 6; ++var4) {
             Point var5 = this.hexCornerOffset(var4);
             var2.add(new Point(var3.x + var5.x, var3.y + var5.y));
         }

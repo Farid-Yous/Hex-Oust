@@ -16,14 +16,15 @@ public class HexoustLauncherFX extends Application {
     public void start(Stage primaryStage) {
         Platform.setImplicitExit(false);
 
+
         //main menu buttons
         Button startBtn = new Button("Start Game");
-        Button exitBtn  = new Button("Exit");
+        Button exitBtn = new Button("Exit");
         startBtn.setMaxWidth(Double.MAX_VALUE);
         exitBtn.setMaxWidth(Double.MAX_VALUE);
 
         startBtn.setOnAction(e -> showPlayerSetup(primaryStage));
-        exitBtn .setOnAction(e -> primaryStage.hide());
+        exitBtn.setOnAction(e -> primaryStage.hide());
 
         VBox menu = new VBox(10, startBtn, exitBtn);
         menu.setStyle(

@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 class FractionalHexCube {
     public final double q;
     public final double r;
@@ -18,12 +13,12 @@ class FractionalHexCube {
     }
 
     public HexCube hexRound() {
-        int var1 = (int)Math.round(this.q);
-        int var2 = (int)Math.round(this.r);
-        int var3 = (int)Math.round(this.s);
-        double var4 = Math.abs((double)var1 - this.q);
-        double var6 = Math.abs((double)var2 - this.r);
-        double var8 = Math.abs((double)var3 - this.s);
+        int var1 = (int) Math.round(this.q);
+        int var2 = (int) Math.round(this.r);
+        int var3 = (int) Math.round(this.s);
+        double var4 = Math.abs((double) var1 - this.q);
+        double var6 = Math.abs((double) var2 - this.r);
+        double var8 = Math.abs((double) var3 - this.s);
         if (var4 > var6 && var4 > var8) {
             var1 = -var2 - var3;
         } else if (var6 > var8) {

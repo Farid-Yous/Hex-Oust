@@ -6,9 +6,8 @@ public class Player {
     private String name;
     private String colour;
     private int numCells;
-    public HashMap<Integer, HashSet<HexCube>> groups;  // Hashmap for o(1) lookup
-    private int nextGroupId;  // To keep track of group IDs
-
+    public HashMap<Integer, HashSet<HexCube>> groups; // Hashmap for o(1) lookup
+    private int nextGroupId; // To keep track of group IDs
     public Player(String name, String colour) {
         if (colour == null || (!colour.equals("blue") && !colour.equals("red"))) {
             throw new IllegalArgumentException("Invalid color! Choose 'blue' or 'red'.");
@@ -18,15 +17,6 @@ public class Player {
         this.numCells = 0;
         this.groups = new HashMap<>();
         this.nextGroupId = 1;
-    }
-    public void removeGroup(HexCube cell) {
-        for(HashSet<HexCube> group : groups.values()) {
-            if(group.contains(cell)) {
-                for(HexCube cube : group) {
-                    group.remove(cube);
-                }
-            }
-        }
     }
     public boolean isInGroup(HexCube cell) {//checks to see if the cell belongs to a group
         for (HashSet<HexCube> group : groups.values()) {
@@ -45,7 +35,9 @@ public class Player {
         }
         return null;
     }
-
+ /*
+ addToGroup takes a cell and a neighbour, and adds the cell to the neighbours group, if the neighbour isnt in a group, a new group is formed with the 2 cells
+  */
     public void addToGroup(HexCube cell, HexCube neighbor) { //adds the cell to an existing group
         Integer neighborGroupId = getGroupId(neighbor);
 
@@ -66,6 +58,11 @@ public class Player {
         newGroup.add(cell);
         groups.put(nextGroupId++, newGroup);
     }
+    /*
+     Merge player group takes 4 arguments, player1 and its cell, and player 2 and its cell. The groups of the cells will be merged together.
+     The 2 player arguments can be the same player, this allows us to merge groups of the same player
+     The group will be occupied by the first player argument
+     */
     public static void mergePlayerGroups(Player player1, HexCube cell1, Player player2, HexCube cell2) {
         Integer group1Id = player1.getGroupId(cell1);
         Integer group2Id = player2.getGroupId(cell2);
@@ -111,4 +108,4 @@ public class Player {
         this.numCells += n;
     }
 
-    }
+}
